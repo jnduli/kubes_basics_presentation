@@ -27,5 +27,27 @@ kubectl get services # notice ip address of service
 curl $(minikube ip):ip_from_above
 ```
 
+# Kubernetes Node JS project
+
+```
+cd vue_project
+docker build -t vue:0.1.0 -f Dockerfile .
+docker container run --publish 8080:8080 --name vue_example vue:0.1.0
+```
+
+With ingress controller
+
+```
+minikube start
+eval $(minikube -p minikube docker-env)
+docker build -t vue:0.1.0 -f Dockerfile .
+minikube addons enable ingress
+kubectl apply -f k8s/
+kubectl get ingress
+kubectl get services
+```
+
+
 # Kubernetes Comic Server
 Service with database and django thing.
+
