@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Nduli's World: Static Website with Pandoc</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimal-ui">
+        <link rel="shortcut icon" href="favicon.ico">
+        <link href="https://jnduli.co.ke/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Nduli's World Full Atom Feed" />
+        <link href="https://jnduli.co.ke/feeds/engineering.atom.xml" type="application/atom+xml" rel="alternate" title="Nduli's World Categories Atom Feed" />
+        <link rel="stylesheet" href="https://jnduli.co.ke/theme/css/entireframework.min.css">
+        <link rel="stylesheet" href="https://jnduli.co.ke/theme/css/style.css">
+        <link rel="stylesheet" href="https://jnduli.co.ke/theme/css/bw.css">
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-89300561-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+    </head>
+
+    <body id="index" class="home container">
+<nav id="menu" class="nav" tabindex="-1">
+    <div>
+        <a href="https://comics.jnduli.co.ke/">Comics</a>
+        <a  href="https://jnduli.co.ke/category/computer.html">Computer</a>
+        <a  class="active" href="https://jnduli.co.ke/category/engineering.html">Engineering</a>
+        <a  href="https://jnduli.co.ke/category/linux.html">Linux</a>
+        <a  href="https://jnduli.co.ke/category/random.html">Random</a>
+        <a   href="https://jnduli.co.ke/pages/projects.html">Projects</a>
+        <a   href="https://jnduli.co.ke/pages/about.html">About</a>
+    </div>
+</nav><!-- /#menu -->
+<header id="banner" class="header">
+    <h1><a href="https://jnduli.co.ke/">Nduli's World <strong></strong></a></h1>
+</header><!-- /#banner --><section id="content" class="article-content">
+    <header>
+      <h1 class="entry-title">
+        <a href="https://jnduli.co.ke/static_website_with_pandoc.html" rel="bookmark"
+           title="Permalink to Static Website with Pandoc">Static Website with Pandoc</a></h1>
+    </header>
+
+    <div class="description row">
+        <a href="https://jnduli.co.ke/category/engineering.html">ENGINEERING</a>
+    </div>
+
+    <div class="entry-content">
+      <p>I needed to pull off a quick website that would have various mathematics
+questions, and thought to try and use pandoc. Here are my learnings:</p>
+<p>I first installed <cite>pandoc-bin</cite> because I didn't to deal with a lot of
+haskell dependencies.</p>
+<div class="highlight"><pre><span></span>yay -S pandoc-bin
+</pre></div>
+<p>The first iteration I made generated an <cite>index.html</cite> file with
+all the contents and a table of contents. The following bashscript shows
+this:</p>
+<div class="highlight"><pre><span></span>mkdir -p output
+pandoc --toc -f markdown -t html --mathjax -s -o ./output/index.html *.md
+rsync -rav -e <span class="s2">&quot;ssh -p PORT&quot;</span> output/ username@domain:/destination_folder
+</pre></div>
+<p>A sample file would look like this:</p>
+<div class="highlight"><pre><span></span># Title that will be in table of contents
+
+Content body
+</pre></div>
+<p>The order in the table of contents is on the alphabetical ordering of
+the files. In my case, the date prefixed all files, so they ended up in
+the order I wanted them to.</p>
+<p>The file however became too large after some time. I didn't want to get
+a static site manager for this, so I tweaked the bashscript.</p>
+<p>I can compile each file to a separate html file with pandoc, but I first
+need to get a list of all files I want.</p>
+<div class="highlight"><pre><span></span>find . -maxdepth <span class="m">1</span> -type f -name <span class="s2">&quot;*.md&quot;</span> -printf <span class="s2">&quot;%f\n&quot;</span> <span class="p">|</span> sort <span class="p">|</span> xargs -I % pandoc -f markdown -t html --mathjax --metadata <span class="nv">title</span><span class="o">=</span><span class="s2">&quot;questions&quot;</span> -o %.html  %
+</pre></div>
+<p>I need to ensure compile the files to a common directory so that its
+easy to sync with my server. An index file that links up to all the
+children files should also be generated dynamically, so that I can
+easily find the links. I created a custom function <cite>gen_html</cite> that does
+this:</p>
+<div class="highlight"><pre><span></span>gen_html <span class="o">()</span> <span class="o">{</span>
+    mkdir -p test_compile
+    <span class="nv">file_name</span><span class="o">=</span><span class="nv">$1</span>
+    <span class="nv">name</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">1</span><span class="p">%.*</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="nb">echo</span> <span class="s2">&quot;[</span><span class="si">${</span><span class="nv">name</span><span class="si">}</span><span class="s2">](./</span><span class="si">${</span><span class="nv">name</span><span class="si">}</span><span class="s2">.html)&quot;</span> &gt;&gt; index.md
+    <span class="nb">echo</span> <span class="s2">&quot;&quot;</span> &gt;&gt; index.md
+    pandoc -f markdown -t html --mathjax --metadata <span class="nv">title</span><span class="o">=</span><span class="s2">&quot;questions&quot;</span> -s -o ./test_compile/<span class="si">${</span><span class="nv">name</span><span class="si">}</span>.html <span class="nv">$file_name</span>
+<span class="o">}</span>
+</pre></div>
+<p>xargs runs in a different process, so the function <cite>gen_html</cite> will not
+be available for that. To fix this, we first export it and then call it
+with the xargs context. The <cite>_</cite> is a place holder for <cite>argv[0]</cite> and <cite>%</cite>
+is the parameter defined by <cite>-I</cite>. See <a class="reference external" href="https://stackoverflow.com/a/11003457">this link</a>
+for more information.</p>
+<div class="highlight"><pre><span></span><span class="nb">export</span> -f gen_html
+find . -maxdepth <span class="m">1</span> -type f -name <span class="s2">&quot;*.md&quot;</span> -printf <span class="s2">&quot;%f\n&quot;</span> <span class="p">|</span> sort <span class="p">|</span> xargs -I % bash -c <span class="s1">&#39;gen_html &quot;$@&quot;&#39;</span> _ %
+</pre></div>
+<p>After which I generate the index with:</p>
+<div class="highlight"><pre><span></span>pandoc -f markdown -t html --mathjax -s -o ./test_compile/index.html index.md
+</pre></div>
+<p>You can find the full code in <a class="reference external" href="https://gist.github.com/jnduli/0d07305c79c542282d105c48e31d004c">this gihub gist</a>.</p>
+
+    </div>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+
+var disqus_config = function () {
+  this.page.url = "https://jnduli.co.ke/static_website_with_pandoc.html";
+  this.page.identifier = "static_website_with_pandoc"
+};
+
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+  s.src = 'https://jnduli-co-ke.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+</section>
+
+
+        <footer id="contentinfo" class="article-content">
+            Written in <a href="https://www.vim.org/">vim</a>, powered by <a href="http://getpelican.com/">Pelican</a>.
+        </footer><!-- /#contentinfo -->
+    </body>
+
+</html>
