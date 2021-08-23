@@ -1,0 +1,3 @@
+[submodule "vue-retirement"]
+	path = vue_project/vue-retirement
+	url = https://github.com/jnduli/vue-retirement.git
