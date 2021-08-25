@@ -1,3 +1,6 @@
 [submodule "vue-retirement"]
 	path = vue_project/vue-retirement
 	url = https://github.com/jnduli/vue-retirement.git
+[submodule "django_project/comic_server"]
+	path = django_project/comic_server
+	url = https://github.com/jnduli/comic_server.git

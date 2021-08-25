@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-comicserver
+  labels:
+    app: postgres-comicserver
+spec:
+   serviceName: "postgresql-service"
+   volumeClaimTemplates:
+   - metadata:
+       name: dbase
+     spec:
+       accessModes: [ "ReadWriteOnce" ]
+       resources:
+         requests:
+           storage: 5Gi
+   replicas: 1
+   selector:
+      matchLabels:
+         app: postgres-container
+   template:
+      metadata:
+         labels:
+            app: postgres-container
+      spec:
+         containers:
+           - name: postgres-container
+             image: postgres
+             ports:
+               - containerPort: 5432
+             volumeMounts:
+               - name: dbase
+                 mountPath: /dbase/db
+             env:
+               - name: POSTGRES_USER
+                 value: admin
+               - name: POSTGRES_PASSWORD
+                 value: randompassword
+               - name: POSTGRES_DB
+                 value: comicsite

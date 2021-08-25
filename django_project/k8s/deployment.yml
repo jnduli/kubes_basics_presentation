@@ -1,0 +1,51 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comic-server
+spec:
+  selector:
+    matchLabels:
+      app: comic-server
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: comic-server
+    spec:
+      containers:
+        - name: comic-server-container
+          image: comic-server:0.1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          env:
+            - name: "ALLOWED_HOSTS"
+              value: "*"
+            - name: "DJANGO_SETTINGS_MODULE"
+              value: "comicsite.production_settings"
+            - name: "SECRET_KEY"
+              value: "randomstring"
+            - name: "DB_NAME"
+              value: "comicsite"
+            - name: "DB_USER"
+              value: "admin"
+            - name: "DB_PASSWORD"
+              value: "randompassword"
+            - name: "DB_HOST"
+              value: postgres-cluster-ip
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: comic-server-clusterip
+spec:
+  selector:
+    app: comic-server
+  ports:
+    - port: 8000
+      targetPort: 8000
+  type: ClusterIP
+

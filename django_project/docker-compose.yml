@@ -1,0 +1,34 @@
+--- 
+version: '3'
+
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "randompassword"
+      POSTGRES_DB: "comicsite"
+
+  comicsite:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: comic_server
+    volumes:
+      - .:/comicsite
+    # command: >
+    #   bash -c "python comicsite/manage.py migrate
+    #   && python comicsite/manage.py runserver 0.0.0.0:8000"
+    environment:
+      ALLOWED_HOSTS: "*"
+      DJANGO_SETTINGS_MODULE: "comicsite.production_settings"
+      SECRET_KEY: "randomstring"
+      DB_NAME: "comicsite"
+      DB_USER: "admin"
+      DB_PASSWORD: "randompassword"
+      DB_HOST: "db"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - "db"

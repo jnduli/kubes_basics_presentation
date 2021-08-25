@@ -51,3 +51,11 @@ kubectl get services
 # Kubernetes Comic Server
 Service with database and django thing.
 
+```
+docker-compose build
+docker-compose up
+```
+
+```
+```
+
